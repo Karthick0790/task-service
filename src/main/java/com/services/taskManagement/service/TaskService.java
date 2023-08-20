@@ -1,8 +1,10 @@
 package com.services.taskManagement.service;
 
-import com.services.taskManagement.converters.TaskMapper;
+import com.services.taskManagement.common.Helpers;
+import com.services.taskManagement.common.MapperUtils;
 import com.services.taskManagement.models.Task;
 import com.services.taskManagement.repository.TaskRepository;
+import com.services.taskManagement.repository.UserRepository;
 import com.services.taskManagement.views.request.TaskCreateRequest;
 import com.services.taskManagement.views.response.TaskInfo;
 import org.springframework.stereotype.Service;
@@ -12,16 +14,22 @@ public class TaskService {
 
     private TaskRepository taskRepository;
 
-    private TaskMapper taskMapper;
+    private UserRepository userRepository;
 
-    public TaskService(TaskRepository taskRepository, TaskMapper taskMapper) {
+    private Helpers helpers;
+
+    public TaskService(TaskRepository taskRepository, UserRepository userRepository, Helpers helpers) {
         this.taskRepository = taskRepository;
-        this.taskMapper = taskMapper;
+        this.userRepository = userRepository;
+        this.helpers = helpers;
     }
 
     public TaskInfo createTask(TaskCreateRequest request) {
-        Task task = taskMapper.mapRequestToModel(request);
+        if (!userRepository.existsById(request.userId())) {
+            throw new IllegalArgumentException("Invalid user id");
+        }
+        Task task = helpers.mapRequestToModel(request);
         taskRepository.save(task);
-        return taskMapper.mapModelToResponse(task);
+        return helpers.mapModelToResponse(task);
     }
 }
